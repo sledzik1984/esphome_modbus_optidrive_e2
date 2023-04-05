@@ -1,0 +1,194 @@
+#Begin
+esphome:
+  name: esp-modbus-fan
+
+esp32:
+  board: nodemcu-32s
+  framework: 
+    type: arduino
+    version: recommended
+  
+# Enableing
+
+logger:
+  #level: VERY_VERBOSE
+  #level: VERBOSE
+  baud_rate: 0
+
+# Enable Home Assistant API
+api:
+  password: ""
+
+ota:
+  password: ""
+
+wifi:
+  ssid: "your_network_ssid"
+  password: "your_network_password"
+
+  # Enable fallback hotspot (captive portal) in case wifi connection fails
+  ap:
+    ssid: "Esp-IoTModbus FAN"
+    password: "2uxGUmM99kJu"
+
+captive_portal:
+    
+
+mqtt:
+  broker: 192.168.15.48
+  username: mqtt_user
+  password: mqtt_pass
+
+
+    
+web_server:
+  port: 80
+
+
+uart:
+  id: mod_bus
+  tx_pin: 1
+  rx_pin: 3
+  baud_rate: 9600
+  stop_bits: 1
+  parity: none
+  #debug:
+  #   direction: BOTH
+  
+  
+modbus:
+  #flow_control_pin: 5
+  id: modbus1
+  send_wait_time: 250ms
+  
+  
+modbus_controller:
+  - id: epever
+    ## the Modbus device addr
+    address: 0x0
+    modbus_id: modbus1
+    setup_priority: -10
+    update_interval: 10s
+
+#text_sensor:
+#  - name: "rtc_clock"
+#    platform: modbus_controller
+#    modbus_controller_id: epever
+#    id: rtc_clock
+#    internal: true
+#    register_type: holding
+#   register_count: 3
+#    raw_encode: HEXBYTES
+#    response_size: 6
+
+switch:
+  - platform: modbus_controller
+    modbus_controller_id: epever
+    id: drive_status
+    name: "Drive Status"
+    register_type: holding
+    address: 0
+    bitmask: 1
+    
+  - platform: modbus_controller
+    modbus_controller_id: epever
+    id: drive_status2
+    name: "Decel Ramp"
+    register_type: holding
+    address: 0
+    bitmask: 2
+    
+  - platform: modbus_controller
+    modbus_controller_id: epever
+    id: drive_status3
+    name: "Fault Reset"
+    register_type: holding
+    address: 0
+    bitmask: 4 
+    
+  - platform: modbus_controller
+    modbus_controller_id: epever
+    id: drive_status4
+    name: "Coast Stop Request"
+    register_type: holding
+    address: 0
+    bitmask: 8    
+    
+
+sensor:
+  - platform: modbus_controller
+    modbus_controller_id: epever
+    name: "Output FREQ"
+    id: out_freq
+    register_type: holding
+    address: 6
+    unit_of_measurement: "Hz"
+    value_type: S_WORD
+    filters:
+    - multiply: 0.1
+    
+  - platform: modbus_controller
+    modbus_controller_id: epever
+    name: "Output Current"
+    id: out_curr
+    register_type: holding
+    address: 7
+    unit_of_measurement: "A"
+    value_type: U_WORD
+    filters:
+    - multiply: 0.1
+    
+   
+    
+
+  - platform: modbus_controller
+    modbus_controller_id: epever
+    name: "Drive TEMP"
+    id: drive_temp
+    register_type: holding
+    address: 22
+    unit_of_measurement: "C"
+    value_type: U_WORD
+    filters:
+    - multiply: 0.1
+
+  - platform: modbus_controller
+    modbus_controller_id: epever
+    name: "Drive ERR NUM"
+    id: drive_errnum
+    register_type: holding
+    address: 5
+    unit_of_measurement: ""
+    value_type: U_WORD
+
+number: 
+  - platform: modbus_controller
+    id: drive_freq_set
+    name: "Drive Frequency - SET"
+    address: 1
+    value_type: U_WORD
+#    use_write_multiple: true
+    multiply: 10
+    unit_of_measurement: 'Hz'
+    icon: mdi:sine-wave
+    min_value: 0
+    max_value: 50
+    step: 1
+    mode: 'slider' 
+
+  - platform: modbus_controller
+    id: drive_ramp_set
+    name: "Drive Ramp TIME - SET"
+    address: 3
+    value_type: U_WORD
+#    use_write_multiple: true
+    multiply: 100
+    unit_of_measurement: 's'
+    icon: mdi:sine-wave
+    min_value: 5
+    max_value: 15
+    step: 1
+    mode: 'slider' 
+    
+    
+    
